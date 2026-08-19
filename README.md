@@ -7,7 +7,7 @@
 需要 Go ≥ 1.22：
 
 ```bash
-go install github.com/caiqianzhang/gitcn@latest   # 发布后可用
+go install github.com/caiqianzhang/gitcn/cmd/gitcn@latest   # 发布后可用
 # 或本地编译：
 go build -o ~/.local/bin/gitcn ./cmd/gitcn
 ```
