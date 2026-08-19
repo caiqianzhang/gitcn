@@ -23,9 +23,10 @@ jobs:
         run: VERSION="${GITHUB_REF_NAME}" ./scripts/release.sh
       - name: Smoke test
         run: |
-          tar -xzf "dist/gitcn-${GITHUB_REF_NAME}-linux-amd64.tar.gz" -C dist
-          ./dist/gitcn version
-          ./dist/gitcn nodes list
+          mkdir -p /tmp/smoke
+          tar -xzf "dist/gitcn-${GITHUB_REF_NAME}-linux-amd64.tar.gz" -C /tmp/smoke
+          /tmp/smoke/gitcn version
+          /tmp/smoke/gitcn nodes list
       - name: Publish GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
