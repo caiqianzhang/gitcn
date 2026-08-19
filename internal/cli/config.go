@@ -45,6 +45,12 @@ func setConfig(key, value string) error {
 			return fmt.Errorf("timeout 需要时长，如 3s: %v", err)
 		}
 		c.Timeout = d
+	case "download_timeout":
+		d, err := time.ParseDuration(value)
+		if err != nil {
+			return fmt.Errorf("download_timeout 需要时长，如 10m: %v", err)
+		}
+		c.DownloadTimeout = d
 	case "mirror_sources":
 		var srcs []string
 		for _, s := range strings.Split(value, ",") {
@@ -71,8 +77,13 @@ func setConfig(key, value string) error {
 			return fmt.Errorf("verbose 需要 true/false")
 		}
 		c.Verbose = b
+	case "test_file_raw_url":
+		if strings.TrimSpace(value) == "" {
+			return fmt.Errorf("test_file_raw_url 需要 URL")
+		}
+		c.TestFileRawURL = strings.TrimSpace(value)
 	default:
-		return fmt.Errorf("未知配置项 %q（可选: cache_ttl/timeout/mirror_sources/max_retry/concurrency/verbose）", key)
+		return fmt.Errorf("未知配置项 %q（可选: cache_ttl/timeout/download_timeout/mirror_sources/max_retry/concurrency/verbose/test_file_raw_url）", key)
 	}
 	return config.Save(c)
 }

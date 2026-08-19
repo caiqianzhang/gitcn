@@ -43,7 +43,7 @@ func TestCloneFallsBackDirectForNonGitHub(t *testing.T) {
 	}
 	defer func() { runGit = orig }()
 
-	if err := cmdClone([]string{"https://gitlab.com/foo/bar", "--depth", "1"}); err != nil {
+	if err := cmdClone(context.Background(), []string{"https://gitlab.com/foo/bar", "--depth", "1"}); err != nil {
 		t.Fatalf("cmdClone: %v", err)
 	}
 	found := false
@@ -79,7 +79,7 @@ func TestCloneFallsBackDirectWhenNoNodes(t *testing.T) {
 	}
 	defer func() { runGit, bestNodes = origRun, origBest }()
 
-	if err := cmdClone([]string{"octocat/Hello-World"}); err != nil {
+	if err := cmdClone(context.Background(), []string{"octocat/Hello-World"}); err != nil {
 		t.Fatalf("cmdClone: %v", err)
 	}
 	found := false

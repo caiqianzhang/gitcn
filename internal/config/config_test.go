@@ -50,6 +50,17 @@ func TestLoadSanitizesBadValues(t *testing.T) {
 	}
 }
 
+func TestDownloadTimeoutDefaultAndSanitize(t *testing.T) {
+	if d := Default(); d.DownloadTimeout != 10*time.Minute {
+		t.Fatalf("默认 DownloadTimeout = %v, want 10m", d.DownloadTimeout)
+	}
+	cfg := &Config{DownloadTimeout: -1 * time.Second}
+	cfg.sanitize()
+	if cfg.DownloadTimeout != 10*time.Minute {
+		t.Fatalf("非法 DownloadTimeout 应钳制为默认, got %v", cfg.DownloadTimeout)
+	}
+}
+
 func TestSaveLoadRoundtrip(t *testing.T) {
 	dir := t.TempDir()
 	os.Setenv("XDG_CONFIG_HOME", dir)

@@ -4,5 +4,4 @@
 /gitcn
 *.exe
 .DS_Store
-/docs/
 coverage.out

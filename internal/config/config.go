@@ -9,26 +9,28 @@ import (
 
 // Config 保存 gitcn 的可配置项。
 type Config struct {
-	CacheTTL       time.Duration `json:"cache_ttl"`
-	MirrorSources  []string      `json:"mirror_sources"`
-	Timeout        time.Duration `json:"timeout"`
-	MaxRetry       int           `json:"max_retry"`
-	Concurrency    int           `json:"concurrency"`
-	Verbose        bool          `json:"verbose"`
-	TestFileRawURL string        `json:"test_file_raw_url"`
+	CacheTTL        time.Duration `json:"cache_ttl"`
+	MirrorSources   []string      `json:"mirror_sources"`
+	Timeout         time.Duration `json:"timeout"`
+	MaxRetry        int           `json:"max_retry"`
+	Concurrency     int           `json:"concurrency"`
+	Verbose         bool          `json:"verbose"`
+	TestFileRawURL  string        `json:"test_file_raw_url"`
+	DownloadTimeout time.Duration `json:"download_timeout"`
 	// BuildURL 仅供测试注入测速 URL 构造器，不参与 JSON 序列化。
 	BuildURL func(host, testPath string) string `json:"-"`
 }
 
 func Default() *Config {
 	return &Config{
-		CacheTTL:       15 * time.Minute,
-		MirrorSources:  []string{},
-		Timeout:        5 * time.Second,
-		MaxRetry:       3,
-		Concurrency:    10,
-		Verbose:        false,
-		TestFileRawURL: "https://raw.githubusercontent.com/microsoft/terminal/refs/heads/main/res/terminal/images/SmallTile.scale-125.png",
+		CacheTTL:        15 * time.Minute,
+		MirrorSources:   []string{},
+		Timeout:         5 * time.Second,
+		MaxRetry:        3,
+		Concurrency:     10,
+		Verbose:         false,
+		TestFileRawURL:  "https://raw.githubusercontent.com/caiqianzhang/gitcn/main/README.md",
+		DownloadTimeout: 10 * time.Minute,
 	}
 }
 
@@ -83,6 +85,9 @@ func (c *Config) sanitize() {
 	}
 	if c.Timeout <= 0 {
 		c.Timeout = d.Timeout
+	}
+	if c.DownloadTimeout <= 0 {
+		c.DownloadTimeout = d.DownloadTimeout
 	}
 	if c.MaxRetry < 1 {
 		c.MaxRetry = d.MaxRetry

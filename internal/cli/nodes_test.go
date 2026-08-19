@@ -19,7 +19,7 @@ func TestNodesAddPersists(t *testing.T) {
 	if err := nodesAdd("my.node.example"); err != nil {
 		t.Fatalf("nodesAdd: %v", err)
 	}
-	c, err := nodes.LoadCacheForTest()
+	c, err := nodes.LoadCache()
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -90,21 +90,20 @@ func writeFileAtomic(p string, b []byte) error {
 	return os.Rename(tmp, p)
 }
 
-// List 返回节点主机名：优先远端 JSON，其次缓存中非 dead 节点，最后内置种子。
+// List 返回候选节点主机名：优先远端 JSON，其次缓存全部节点，最后内置种子。
+// 缓存分支保留 dead 节点：List 只在缓存过期（Best 准备重测）时被调用，
+// 让上一轮失败的节点也有机会重新测速，兑现 MarkDead「过期重测自然恢复」的语义；
+// 候选筛选（跳过 dead）由 Best 的新鲜缓存路径负责。
 func List(ctx context.Context, cfg *config.Config) ([]string, error) {
 	if hosts, err := fetchRemote(ctx, cfg); err == nil && len(hosts) > 0 {
 		return hosts, nil
 	}
-	if cache, err := loadCache(); err == nil {
-		var hosts []string
+	if cache, err := loadCache(); err == nil && len(cache.Nodes) > 0 {
+		hosts := make([]string, 0, len(cache.Nodes))
 		for _, n := range cache.Nodes {
-			if !n.Dead {
-				hosts = append(hosts, n.Host)
-			}
+			hosts = append(hosts, n.Host)
 		}
-		if len(hosts) > 0 {
-			return hosts, nil
-		}
+		return hosts, nil
 	}
 	return Seed()
 }
@@ -172,8 +171,32 @@ func Add(host string) error {
 	return saveCache(&Cache{Nodes: cache.Nodes, FetchedAt: time.Time{}})
 }
 
-// LoadCacheForTest 返回当前节点缓存（命名含 ForTest，后续可改名）。
-func LoadCacheForTest() (*Cache, error) {
+// MarkDead 把节点标记为 dead 并写回缓存，让后续选择跳过它。
+// 缓存过期重新测速时会自然恢复（若节点仍可用）。
+func MarkDead(host string) error {
+	cache, err := loadCache()
+	if err != nil {
+		return err
+	}
+	updated := false
+	for i := range cache.Nodes {
+		if cache.Nodes[i].Host == host {
+			cache.Nodes[i].Dead = true
+			cache.Nodes[i].TestedAt = time.Now().Format(time.RFC3339)
+			updated = true
+			break
+		}
+	}
+	if !updated {
+		// 节点未被跟踪（例如来自种子列表的临时节点）时 no-op：
+		// 候选节点必然已由测速写入缓存，此路径只在未来改动选路逻辑时兜底。
+		return nil
+	}
+	return saveCache(cache)
+}
+
+// LoadCache 返回当前节点缓存。
+func LoadCache() (*Cache, error) {
 	return loadCache()
 }
 

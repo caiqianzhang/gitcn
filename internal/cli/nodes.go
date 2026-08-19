@@ -8,7 +8,7 @@ import (
 	"github.com/caiqianzhang/gitcn/internal/nodes"
 )
 
-func cmdNodes(args []string) error {
+func cmdNodes(ctx context.Context, args []string) error {
 	if len(args) == 0 {
 		return fmt.Errorf("用法: gitcn nodes list|update|add <域名>")
 	}
@@ -20,7 +20,7 @@ func cmdNodes(args []string) error {
 		if err != nil {
 			return err
 		}
-		return nodesUpdate(context.Background(), cfg)
+		return nodesUpdate(ctx, cfg)
 	case "add":
 		if len(args) < 2 {
 			return fmt.Errorf("用法: gitcn nodes add <域名>")
@@ -32,7 +32,7 @@ func cmdNodes(args []string) error {
 }
 
 func nodesList() error {
-	c, err := nodes.LoadCacheForTest()
+	c, err := nodes.LoadCache()
 	if err != nil {
 		return err
 	}

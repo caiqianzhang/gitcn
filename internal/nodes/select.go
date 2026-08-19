@@ -31,21 +31,21 @@ func Best(ctx context.Context, cfg *config.Config) ([]string, error) {
 	}
 	results := speedtest.Run(ctx, hosts, cfg)
 
-	cache, _ := loadCache()
-	byHost := map[string]Node{}
-	for _, n := range cache.Nodes {
-		byHost[n.Host] = n
-	}
-	var alive []Node
+	var cached []Node
 	now := time.Now().Format(time.RFC3339)
 	for _, r := range results {
-		byHost[r.Node] = Node{Host: r.Node, LatencyMS: r.LatencyMS, Dead: r.Dead, TestedAt: now}
-		if !r.Dead {
-			alive = append(alive, byHost[r.Node])
+		cached = append(cached, Node{Host: r.Node, LatencyMS: r.LatencyMS, Dead: r.Dead, TestedAt: now})
+	}
+	// 只保留本轮测速过的节点并按 Host 排序：裁剪已不在节点池的旧节点，令 cache.json 输出确定。
+	sort.Slice(cached, func(i, j int) bool { return cached[i].Host < cached[j].Host })
+	_ = saveCache(&Cache{Nodes: cached, FetchedAt: time.Now()})
+
+	var alive []Node
+	for _, nd := range cached {
+		if !nd.Dead {
+			alive = append(alive, nd)
 		}
 	}
-	_ = saveCache(&Cache{Nodes: cacheValues(byHost), FetchedAt: time.Now()})
-
 	if len(alive) == 0 {
 		return nil, fmt.Errorf("所有节点均不可用")
 	}
@@ -60,14 +60,6 @@ func firstNodes(nodes []Node, n int) []string {
 	out := make([]string, 0, n)
 	for _, nd := range nodes[:n] {
 		out = append(out, nd.Host)
-	}
-	return out
-}
-
-func cacheValues(m map[string]Node) []Node {
-	out := make([]Node, 0, len(m))
-	for _, v := range m {
-		out = append(out, v)
 	}
 	return out
 }

@@ -45,7 +45,7 @@ func normalizeCloneArg(raw string) string {
 	return raw
 }
 
-func cmdClone(args []string) error {
+func cmdClone(ctx context.Context, args []string) error {
 	if len(args) == 0 {
 		return fmt.Errorf("用法: gitcn clone <url|owner/repo> [git参数...]")
 	}
@@ -65,7 +65,7 @@ func cmdClone(args []string) error {
 	if err != nil {
 		return err
 	}
-	candidates, err := bestNodes(context.Background(), cfg)
+	candidates, err := bestNodes(ctx, cfg)
 	if err != nil {
 		if cfg.Verbose {
 			fmt.Fprintf(os.Stderr, "提示: %v，将直连执行\n", err)
@@ -84,15 +84,19 @@ func cmdClone(args []string) error {
 		if cfg.Verbose {
 			fmt.Printf("→ 使用节点 %s\n", node)
 		}
-		return runGit(append(gitSlowOpts, append([]string{"clone", rewritten}, rest...)...))
+		err = runGit(append(gitSlowOpts, append([]string{"clone", rewritten}, rest...)...))
+		if err != nil {
+			nodes.MarkDead(node) // 失败节点标记 dead，下次不再优先选择
+		}
+		return err
 	})
 }
 
-func cmdFetch(args []string) error { return fetchOrPull(args, "fetch") }
+func cmdFetch(ctx context.Context, args []string) error { return fetchOrPull(ctx, args, "fetch") }
 
-func cmdPull(args []string) error { return fetchOrPull(args, "pull") }
+func cmdPull(ctx context.Context, args []string) error { return fetchOrPull(ctx, args, "pull") }
 
-func fetchOrPull(args []string, verb string) error {
+func fetchOrPull(ctx context.Context, args []string, verb string) error {
 	raw, err := repoRemoteURL()
 	if err != nil {
 		return fmt.Errorf("当前目录不是 git 仓库或没有 origin: %w", err)
@@ -105,7 +109,7 @@ func fetchOrPull(args []string, verb string) error {
 	if err != nil {
 		return err
 	}
-	candidates, err := bestNodes(context.Background(), cfg)
+	candidates, err := bestNodes(ctx, cfg)
 	if err != nil {
 		return runGit(append(gitSlowOpts, append([]string{verb}, args...)...)) // 直连兜底
 	}
@@ -117,7 +121,11 @@ func fetchOrPull(args []string, verb string) error {
 		}
 		gitArgs := append(gitSlowOpts, "-c", "remote.origin.url="+rewritten, verb)
 		gitArgs = append(gitArgs, args...)
-		return runGit(gitArgs)
+		err = runGit(gitArgs)
+		if err != nil {
+			nodes.MarkDead(node)
+		}
+		return err
 	})
 }
 

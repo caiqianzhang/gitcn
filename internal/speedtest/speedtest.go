@@ -79,8 +79,15 @@ func test(ctx context.Context, host string, cfg *config.Config, build URLBuilder
 		return Result{Node: host, Dead: true}
 	}
 	ct := resp.Header.Get("Content-Type")
-	// 防假代理：返回的是 text/html 首页（如 IP 查询站）→ 判定 dead
-	if strings.Contains(ct, "text/html") || len(body) < 100 {
+	// 防假代理：返回体过小或为 HTML 首页 → dead。
+	// 保留 <100B 守卫：真实探测文件恒 >100B（默认 README 约 3KB），从无误伤合法文件，
+	// 但能拦截「200 + 短 text/plain stub」这类无 HTML 标记的假代理；
+	// 另加 HTML 体嗅探，覆盖被误标 Content-Type 的 HTML 首页。
+	lower := strings.ToLower(strings.TrimSpace(string(body)))
+	isHTML := strings.Contains(ct, "text/html") ||
+		strings.HasPrefix(lower, "<!doctype html") ||
+		strings.HasPrefix(lower, "<html")
+	if len(body) < 100 || isHTML {
 		return Result{Node: host, Dead: true}
 	}
 	return Result{Node: host, LatencyMS: elapsed.Milliseconds()}

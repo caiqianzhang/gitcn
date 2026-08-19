@@ -109,3 +109,46 @@ func TestAddInvalidatesCache(t *testing.T) {
 		t.Fatalf("Add 后 FetchedAt 应置零，got %v", c.FetchedAt)
 	}
 }
+
+func TestMarkDeadPersists(t *testing.T) {
+	withTempConfig(t)
+	if err := saveCache(&Cache{
+		Nodes:     []Node{{Host: "dead-target.com", LatencyMS: 50}, {Host: "ok.com", LatencyMS: 80}},
+		FetchedAt: time.Now(),
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if err := MarkDead("dead-target.com"); err != nil {
+		t.Fatalf("MarkDead: %v", err)
+	}
+	c, err := LoadCache()
+	if err != nil {
+		t.Fatal(err)
+	}
+	byHost := map[string]Node{}
+	for _, n := range c.Nodes {
+		byHost[n.Host] = n
+	}
+	if !byHost["dead-target.com"].Dead {
+		t.Fatal("MarkDead 后节点应为 dead")
+	}
+	if byHost["ok.com"].Dead {
+		t.Fatal("其他节点不应受影响")
+	}
+}
+
+func TestMarkDeadUnknownHost(t *testing.T) {
+	withTempConfig(t)
+	if err := MarkDead("not-in-cache.com"); err != nil {
+		t.Fatalf("缓存外节点 MarkDead 应 no-op，got %v", err)
+	}
+	c, err := loadCache()
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, n := range c.Nodes {
+		if n.Host == "not-in-cache.com" {
+			t.Fatal("no-op 不应写入缓存")
+		}
+	}
+}
