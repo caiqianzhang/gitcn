@@ -8,8 +8,29 @@ permissions:
   contents: write # 允许创建 GitHub Release 并上传产物
 
 jobs:
+  # Windows 原生构建 + 冒烟测试：跨编译产物在发布前必须先在真实 Windows 上验证可运行。
+  smoke-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+      - name: Test
+        run: go test -race ./...
+        shell: bash
+      - name: Build native Windows binary
+        run: go build -ldflags "-X github.com/caiqianzhang/gitcn/internal/cli.Version=${GITHUB_REF_NAME}" -o gitcn.exe ./cmd/gitcn
+        shell: bash
+      - name: Smoke test
+        run: |
+          ./gitcn.exe version
+          ./gitcn.exe nodes list
+        shell: bash
+
   release:
     runs-on: ubuntu-latest
+    needs: smoke-windows # Windows 原生冒烟未通过则不发布
     steps:
       - uses: actions/checkout@v4
         with:
