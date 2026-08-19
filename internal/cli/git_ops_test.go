@@ -67,7 +67,7 @@ func containsSlowOpts(args []string) bool {
 }
 
 func TestCloneFallsBackDirectWhenNoNodes(t *testing.T) {
-	withTempXDG(t)
+	withTempConfigDir(t)
 	origRun, origBest := runGit, bestNodes
 	var got []string
 	runGit = func(args []string) error {

@@ -15,8 +15,8 @@ import (
 func withTempConfig(t *testing.T) {
 	t.Helper()
 	dir := t.TempDir()
-	os.Setenv("XDG_CONFIG_HOME", dir)
-	t.Cleanup(func() { os.Unsetenv("XDG_CONFIG_HOME") })
+	os.Setenv("GITCN_CONFIG_DIR", dir)
+	t.Cleanup(func() { os.Unsetenv("GITCN_CONFIG_DIR") })
 }
 
 func TestFetchRemoteSuccess(t *testing.T) {

@@ -11,7 +11,7 @@ import (
 )
 
 func TestSetConfigMirrorSourcesTrims(t *testing.T) {
-	withTempXDG(t)
+	withTempConfigDir(t)
 	if err := setConfig("mirror_sources", " https://a.com/nodes.json , b.com ,, "); err != nil {
 		t.Fatalf("setConfig: %v", err)
 	}
@@ -42,7 +42,7 @@ func TestExitCodePropagatesGitCode(t *testing.T) {
 }
 
 func TestSetConfigDownloadTimeout(t *testing.T) {
-	withTempXDG(t)
+	withTempConfigDir(t)
 	if err := setConfig("download_timeout", "20m"); err != nil {
 		t.Fatalf("setConfig: %v", err)
 	}
@@ -59,7 +59,7 @@ func TestSetConfigDownloadTimeout(t *testing.T) {
 }
 
 func TestSetConfigTestFileRawURL(t *testing.T) {
-	withTempXDG(t)
+	withTempConfigDir(t)
 	if err := setConfig("test_file_raw_url", "  https://raw.githubusercontent.com/caiqianzhang/gitcn/main/LICENSE  "); err != nil {
 		t.Fatalf("setConfig: %v", err)
 	}

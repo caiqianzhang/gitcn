@@ -34,13 +34,19 @@ func Default() *Config {
 	}
 }
 
+// dirEnv 允许测试或需要自定义配置目录的场景覆盖系统默认配置目录（跨平台，含 Windows）。
+const dirEnv = "GITCN_CONFIG_DIR"
+
 // Dir 返回配置目录并确保其存在。
 func Dir() (string, error) {
-	base, err := os.UserConfigDir()
-	if err != nil {
-		return "", err
+	dir := os.Getenv(dirEnv)
+	if dir == "" {
+		base, err := os.UserConfigDir()
+		if err != nil {
+			return "", err
+		}
+		dir = filepath.Join(base, "gitcn")
 	}
-	dir := filepath.Join(base, "gitcn")
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return "", err
 	}

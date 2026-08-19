@@ -22,8 +22,8 @@ func TestDefaultHasSaneValues(t *testing.T) {
 
 func TestLoadSanitizesBadValues(t *testing.T) {
 	dir := t.TempDir()
-	os.Setenv("XDG_CONFIG_HOME", dir)
-	defer os.Unsetenv("XDG_CONFIG_HOME")
+	os.Setenv("GITCN_CONFIG_DIR", dir)
+	defer os.Unsetenv("GITCN_CONFIG_DIR")
 
 	bad := `{"cache_ttl":0,"timeout":0,"max_retry":-1,"concurrency":0}`
 	if err := os.MkdirAll(filepath.Join(dir, "gitcn"), 0o755); err != nil {
@@ -63,8 +63,8 @@ func TestDownloadTimeoutDefaultAndSanitize(t *testing.T) {
 
 func TestSaveLoadRoundtrip(t *testing.T) {
 	dir := t.TempDir()
-	os.Setenv("XDG_CONFIG_HOME", dir)
-	defer os.Unsetenv("XDG_CONFIG_HOME")
+	os.Setenv("GITCN_CONFIG_DIR", dir)
+	defer os.Unsetenv("GITCN_CONFIG_DIR")
 
 	c := Default()
 	c.CacheTTL = 5 * time.Minute
@@ -86,8 +86,8 @@ func TestSaveLoadRoundtrip(t *testing.T) {
 
 func TestLoadMissingReturnsDefault(t *testing.T) {
 	dir := t.TempDir()
-	os.Setenv("XDG_CONFIG_HOME", dir)
-	defer os.Unsetenv("XDG_CONFIG_HOME")
+	os.Setenv("GITCN_CONFIG_DIR", dir)
+	defer os.Unsetenv("GITCN_CONFIG_DIR")
 
 	c, err := Load()
 	if err != nil {
@@ -98,10 +98,22 @@ func TestLoadMissingReturnsDefault(t *testing.T) {
 	}
 }
 
+func TestDirHonorsOverrideEnv(t *testing.T) {
+	dir := t.TempDir()
+	t.Setenv("GITCN_CONFIG_DIR", dir)
+	d, err := Dir()
+	if err != nil {
+		t.Fatalf("Dir: %v", err)
+	}
+	if d != dir {
+		t.Fatalf("Dir = %q, want %q（应优先 GITCN_CONFIG_DIR）", d, dir)
+	}
+}
+
 func TestDirCreates(t *testing.T) {
 	dir := t.TempDir()
-	os.Setenv("XDG_CONFIG_HOME", dir)
-	defer os.Unsetenv("XDG_CONFIG_HOME")
+	os.Setenv("GITCN_CONFIG_DIR", dir)
+	defer os.Unsetenv("GITCN_CONFIG_DIR")
 
 	d, err := Dir()
 	if err != nil {

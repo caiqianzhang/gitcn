@@ -61,7 +61,7 @@ func TestDownloadRejectsBadArgs(t *testing.T) {
 }
 
 func TestDownloadFallsBackDirectWhenNoNodes(t *testing.T) {
-	withTempXDG(t)
+	withTempConfigDir(t)
 	origBest, origDl := bestNodes, downloadFileFn
 	var gotURL, gotOut string
 	bestNodes = func(ctx context.Context, cfg *config.Config) ([]string, error) {
@@ -127,7 +127,7 @@ func TestVerifySHA256(t *testing.T) {
 }
 
 func TestDownloadVerifiesSHA256Success(t *testing.T) {
-	withTempXDG(t)
+	withTempConfigDir(t)
 	content := []byte("fixture bytes for checksum")
 	want := fmt.Sprintf("%x", sha256.Sum256(content))
 	origBest, origDl := bestNodes, downloadFileFn
@@ -154,7 +154,7 @@ func TestDownloadVerifiesSHA256Success(t *testing.T) {
 }
 
 func TestDownloadSHA256MismatchFailsAndRemovesFile(t *testing.T) {
-	withTempXDG(t)
+	withTempConfigDir(t)
 	content := []byte("fixture bytes for checksum")
 	wrong := strings.Repeat("0", 64)
 	origBest, origDl := bestNodes, downloadFileFn
@@ -181,7 +181,7 @@ func TestDownloadSHA256MismatchFailsAndRemovesFile(t *testing.T) {
 }
 
 func TestDownloadRejectsInvalidSHA256(t *testing.T) {
-	withTempXDG(t)
+	withTempConfigDir(t)
 	raw := "https://github.com/a/b/releases/download/v1/x.zip"
 	if err := cmdDownload(context.Background(), []string{raw, "--sha256", "not-a-hex"}); err == nil {
 		t.Fatal("非法 --sha256 值应报错")

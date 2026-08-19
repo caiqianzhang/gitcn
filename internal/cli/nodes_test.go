@@ -8,14 +8,14 @@ import (
 	"github.com/caiqianzhang/gitcn/internal/nodes"
 )
 
-func withTempXDG(t *testing.T) {
+func withTempConfigDir(t *testing.T) {
 	t.Helper()
 	dir := t.TempDir()
-	t.Setenv("XDG_CONFIG_HOME", dir)
+	t.Setenv("GITCN_CONFIG_DIR", dir)
 }
 
 func TestNodesAddPersists(t *testing.T) {
-	withTempXDG(t)
+	withTempConfigDir(t)
 	if err := nodesAdd("my.node.example"); err != nil {
 		t.Fatalf("nodesAdd: %v", err)
 	}
@@ -35,7 +35,7 @@ func TestNodesAddPersists(t *testing.T) {
 }
 
 func TestNodesUpdateFetchesRemote(t *testing.T) {
-	withTempXDG(t)
+	withTempConfigDir(t)
 	cfg, _ := config.Load()
 	cfg.MirrorSources = []string{"http://127.0.0.1:1/nodes.json"}
 	if err := nodesUpdate(context.Background(), cfg); err == nil {
